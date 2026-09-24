@@ -125,20 +125,45 @@ plt.tight_layout()
 plt.savefig(BASE_DIR / "boxplots.png", dpi=200)
 plt.close()
 
-# A few comparisons between variables.
+# Save each data-story chart separately for review.
+plt.figure(figsize=(7, 5))
+sns.barplot(data=df_clean, x="sex", y="survived", estimator="mean")
+plt.title("Survival rate by sex")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "survival_by_sex.png", dpi=200)
+plt.close()
+
+plt.figure(figsize=(7, 5))
+sns.barplot(data=df_clean, x="pclass", y="survived", estimator="mean")
+plt.title("Survival rate by passenger class")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "survival_by_class.png", dpi=200)
+plt.close()
+
+plt.figure(figsize=(7, 5))
+sns.boxplot(data=df_clean, x="sex", y="age")
+plt.title("Age by sex")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "age_by_sex.png", dpi=200)
+plt.close()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7)
+plt.title("Fare versus age by survival")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "fare_age_survival.png", dpi=200)
+plt.close()
+
+# Keep the combined image for quick viewing as well.
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 sns.barplot(data=df_clean, x="sex", y="survived", estimator="mean", ax=axes[0, 0])
 axes[0, 0].set_title("Survival rate by sex")
-
 sns.barplot(data=df_clean, x="pclass", y="survived", estimator="mean", ax=axes[0, 1])
 axes[0, 1].set_title("Survival rate by passenger class")
-
 sns.boxplot(data=df_clean, x="sex", y="age", ax=axes[1, 0])
 axes[1, 0].set_title("Age by sex")
-
 sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7, ax=axes[1, 1])
-axes[1, 1].set_title("Fare vs age by survival")
-
+axes[1, 1].set_title("Fare versus age by survival")
 plt.tight_layout()
 plt.savefig(CHART_DIR / "multivariate_story.png", dpi=200)
 plt.close()
