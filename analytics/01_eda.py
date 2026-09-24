@@ -154,20 +154,6 @@ plt.tight_layout()
 plt.savefig(BASE_DIR / "fare_age_survival.png", dpi=200)
 plt.close()
 
-# Keep the combined image for quick viewing as well.
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-sns.barplot(data=df_clean, x="sex", y="survived", estimator="mean", ax=axes[0, 0])
-axes[0, 0].set_title("Survival rate by sex")
-sns.barplot(data=df_clean, x="pclass", y="survived", estimator="mean", ax=axes[0, 1])
-axes[0, 1].set_title("Survival rate by passenger class")
-sns.boxplot(data=df_clean, x="sex", y="age", ax=axes[1, 0])
-axes[1, 0].set_title("Age by sex")
-sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7, ax=axes[1, 1])
-axes[1, 1].set_title("Fare versus age by survival")
-plt.tight_layout()
-plt.savefig(CHART_DIR / "multivariate_story.png", dpi=200)
-plt.close()
-
 # Save the fare-age relationship as its own scatterplot.
 plt.figure(figsize=(8, 6))
 sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7)
