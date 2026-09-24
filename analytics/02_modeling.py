@@ -156,48 +156,6 @@ results_df = pd.DataFrame(results)
 print("\nClassification comparison table:")
 print(results_df[["model", "accuracy", "precision", "recall", "f1", "roc_auc"]].to_string(index=False))
 
-best_name = results_df.sort_values("f1", ascending=False).iloc[0]["model"]
-best_model = pipelines[best_name]
-joblib.dump(best_model, MODEL_PATH)
-print(f"\nSaved best model pipeline to {MODEL_PATH} using {best_name}.")
-
-# Save a picture of the decision tree.
-tree_pipeline = pipelines["decision_tree"]
-feature_names = tree_pipeline.named_steps["preprocess"].get_feature_names_out()
-plt.figure(figsize=(24, 12))
-plot_tree(
-    tree_pipeline.named_steps["model"],
-    feature_names=feature_names,
-    class_names=["Died", "Survived"],
-    filled=True,
-    rounded=True,
-)
-plt.tight_layout()
-plt.savefig(BASE_DIR / "decision_tree.png", dpi=200)
-plt.close()
-
-fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-for axis, (name, matrix) in zip(axes, confusion_matrices.items()):
-    sns.heatmap(matrix, annot=True, fmt="d", cmap="Blues", cbar=False, ax=axis)
-    axis.set_title(name.replace("_", " ").title())
-    axis.set_xlabel("Predicted")
-    axis.set_ylabel("Actual")
-plt.tight_layout()
-plt.savefig(BASE_DIR / "confusion_matrices.png", dpi=200)
-plt.close()
-
-plt.figure(figsize=(8, 6))
-for name, fpr, tpr, auc_value in roc_data:
-    plt.plot(fpr, tpr, label=f"{name.replace('_', ' ').title()} (AUC={auc_value:.3f})")
-plt.plot([0, 1], [0, 1], "k--", label="Chance")
-plt.xlabel("False positive rate")
-plt.ylabel("True positive rate")
-plt.title("ROC curves")
-plt.legend()
-plt.tight_layout()
-plt.savefig(BASE_DIR / "roc_curves.png", dpi=200)
-plt.close()
-
 # Compare a plain, weighted, and oversampled classifier.
 class_balance = y_train.value_counts(normalize=True)
 print("\nClass balance in training data:")
@@ -274,6 +232,72 @@ rf_grid.fit(X_train, y_train)
 print("\nBest RandomForest parameters:")
 print(rf_grid.best_params_)
 print("Best RandomForest OOB score:", rf_grid.best_estimator_.named_steps["model"].oob_score_)
+
+# Evaluate the tuned forest on the held-out test set before choosing the saved model.
+tuned_name = "tuned_random_forest"
+tuned_model = rf_grid.best_estimator_
+tuned_pred = tuned_model.predict(X_test)
+tuned_prob = tuned_model.predict_proba(X_test)[:, 1]
+tuned_auc = roc_auc_score(y_test, tuned_prob)
+results.append(
+    {
+        "model": tuned_name,
+        "accuracy": accuracy_score(y_test, tuned_pred),
+        "precision": precision_score(y_test, tuned_pred, zero_division=0),
+        "recall": recall_score(y_test, tuned_pred, zero_division=0),
+        "f1": f1_score(y_test, tuned_pred, zero_division=0),
+        "roc_auc": tuned_auc,
+        "confusion_matrix": confusion_matrix(y_test, tuned_pred),
+    }
+)
+confusion_matrices[tuned_name] = results[-1]["confusion_matrix"]
+tuned_fpr, tuned_tpr, _ = roc_curve(y_test, tuned_prob)
+roc_data.append((tuned_name, tuned_fpr, tuned_tpr, tuned_auc))
+results_df = pd.DataFrame(results)
+print("\nClassification comparison including tuned RandomForest:")
+print(results_df[["model", "accuracy", "precision", "recall", "f1", "roc_auc"]].to_string(index=False))
+
+best_name = results_df.sort_values("f1", ascending=False).iloc[0]["model"]
+best_model = tuned_model if best_name == tuned_name else pipelines[best_name]
+joblib.dump(best_model, MODEL_PATH)
+print(f"\nSaved best model pipeline to {MODEL_PATH} using {best_name}.")
+
+# Save the decision tree and evaluation plots after all four classifiers are evaluated.
+tree_pipeline = pipelines["decision_tree"]
+feature_names = tree_pipeline.named_steps["preprocess"].get_feature_names_out()
+plt.figure(figsize=(24, 12))
+plot_tree(
+    tree_pipeline.named_steps["model"],
+    feature_names=feature_names,
+    class_names=["Died", "Survived"],
+    filled=True,
+    rounded=True,
+)
+plt.tight_layout()
+plt.savefig(BASE_DIR / "decision_tree.png", dpi=200)
+plt.close()
+
+fig, axes = plt.subplots(1, 4, figsize=(20, 4))
+for axis, (name, matrix) in zip(axes, confusion_matrices.items()):
+    sns.heatmap(matrix, annot=True, fmt="d", cmap="Blues", cbar=False, ax=axis)
+    axis.set_title(name.replace("_", " ").title())
+    axis.set_xlabel("Predicted")
+    axis.set_ylabel("Actual")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "confusion_matrices.png", dpi=200)
+plt.close()
+
+plt.figure(figsize=(8, 6))
+for name, fpr, tpr, auc_value in roc_data:
+    plt.plot(fpr, tpr, label=f"{name.replace('_', ' ').title()} (AUC={auc_value:.3f})")
+plt.plot([0, 1], [0, 1], "k--", label="Chance")
+plt.xlabel("False positive rate")
+plt.ylabel("True positive rate")
+plt.title("ROC curves")
+plt.legend()
+plt.tight_layout()
+plt.savefig(BASE_DIR / "roc_curves.png", dpi=200)
+plt.close()
 
 # Predict fare as a separate regression task.
 regression_df = df.drop(columns=["survived"], errors="ignore").copy()

@@ -60,13 +60,14 @@ All three classifiers use the same stratified split. The comparison table is sav
 | Logistic Regression | 0.815 | 0.797 | 0.691 | 0.740 | 0.869 |
 | Decision Tree | 0.815 | 0.787 | 0.706 | 0.744 | 0.815 |
 | Random Forest | 0.792 | 0.772 | 0.647 | 0.704 | 0.833 |
+| Tuned Random Forest | 0.809 | 0.815 | 0.647 | 0.721 | 0.834 |
 
 The confusion matrices are saved in `confusion_matrices.png`, and the three ROC curves are saved in `roc_curves.png`. The Decision Tree visualization is saved in `decision_tree.png` with transformed feature names and class names.
 
 For imbalance handling, the baseline F1 was 0.740, class weighting produced 0.779, and SMOTE produced 0.758. Class weighting worked best on this split because it improved recall without reducing precision as much as SMOTE. SMOTE is inside the imbalanced-learn pipeline after preprocessing, so it is fitted only on the training fold.
 
-Random Forest tuning selected `n_estimators=100`, `max_depth=6`, `max_features='sqrt'`, and `min_samples_leaf=2`, with an OOB score of about 0.812. The bounded depth and leaf-size settings reduce the chance of fitting noise in this small dataset.
+Random Forest tuning selected `n_estimators=100`, `max_depth=6`, `max_features='sqrt'`, and `min_samples_leaf=2`, with an OOB score of about 0.812. The tuned forest is evaluated on the held-out test set and included in `model_metrics.csv` and `model_comparison.csv` before the best pipeline is selected. Its test F1 was 0.721, so the Decision Tree remained the saved model with the highest F1 at 0.744. The bounded depth and leaf-size settings reduce the chance of fitting noise in this small dataset.
 
 The fare regression produced MAE 18.394, RMSE 41.358, R2 0.359, and adjusted R2 0.268. The residual plot is saved as `residual_plot.png`; its spread is reasonably random around zero, so there is no strong visible heteroscedasticity pattern, although the model does not explain all fare variation.
 
-The decision tree is the selected classifier by holdout F1 at 0.744, narrowly ahead of Logistic Regression at 0.740. Logistic Regression has the best AUC at 0.869, so it ranks the classes better across thresholds. I would deploy the Decision Tree if the priority is the chosen F1 score and straightforward explanation, while keeping Logistic Regression as a strong alternative for probability ranking. Neither model should be treated as perfect; the realistic scores and the leakage removal make this comparison more trustworthy.
+The decision tree is the selected classifier by holdout F1 at 0.744, ahead of Logistic Regression at 0.740 and the tuned Random Forest at 0.721. Logistic Regression has the best AUC at 0.869, so it ranks the classes better across thresholds. I would deploy the Decision Tree if the priority is the chosen F1 score and straightforward explanation, while keeping Logistic Regression as a strong alternative for probability ranking. Neither model should be treated as perfect; the realistic scores and the leakage removal make this comparison more trustworthy.
