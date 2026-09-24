@@ -8,7 +8,7 @@ from typing import Any, TypedDict
 import chromadb
 from fastapi import FastAPI
 from langgraph.graph import END, StateGraph
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parent
@@ -16,10 +16,13 @@ DOCS_DIR = ROOT / "docs"
 COLLECTION_NAME = "zepto_policies"
 VECTOR_STORE_PATH = ROOT / "chroma_store"
 
-PROMPT_TEMPLATE = """Answer the Zepto customer question using only the policy text below.
-Keep the answer short and return JSON with these fields: answer, sources, confidence.
-Do not add information that is not in the policy text.
-Example:
+PROMPT_TEMPLATE = """Role: You are a Zepto customer support assistant.
+Context: Use only the policy excerpts supplied below.
+Task: Answer the customer's question using the retrieved policy context.
+Format: Return valid JSON with exactly answer, sources, and confidence fields.
+Length: Keep the answer short and complete.
+Negative constraint: Do not add information that is not in the policy text.
+Few-shot example:
 User: "What is the delivery fee for orders below INR 149?"
 Context: "Standard delivery is free on orders over INR 149; orders below this threshold incur a flat INR 25 delivery fee."
 Answer: {{"answer": "Orders below INR 149 incur a flat INR 25 delivery fee.", "sources": ["doc_01.txt"], "confidence": 0.97}}
@@ -109,13 +112,13 @@ class PolicyAssistant:
 
         if self.mock_llm:
             snippet = top_chunks[0]["document"][:200] if top_chunks else "the policy records"
-            state["answer"] = f"According to the policy: {snippet}"
+            state["answer"] = f"Based on the retrieved context: {snippet}"
             state["confidence"] = 1.0
             return state
 
         context = "\n\n".join(chunk["document"] for chunk in top_chunks)
         prompt = PROMPT_TEMPLATE.format(query=state["query"], context=context)
-        payload = self._parse_and_validate(self._call_real_llm(prompt), state["sources"])
+        payload = self._generate_real_answer(prompt, state["sources"])
         state["answer"] = payload["answer"]
         state["sources"] = payload["sources"]
         state["confidence"] = payload["confidence"]
@@ -128,19 +131,28 @@ class PolicyAssistant:
             "confidence": 0.9,
         })
 
-    def _parse_and_validate(self, raw_output: str, fallback_sources: list[str]) -> dict[str, Any]:
-        try:
-            payload = json.loads(raw_output)
-        except json.JSONDecodeError:
-            payload = {}
-        if not isinstance(payload, dict):
-            payload = {}
-        answer = str(payload.get("answer", "Unable to answer using the provided context."))
-        sources = payload.get("sources")
-        if not isinstance(sources, list):
-            sources = fallback_sources
-        confidence = max(0.0, min(float(payload.get("confidence", 0.5)), 1.0))
-        return {"answer": answer, "sources": sources, "confidence": confidence}
+    def _parse_and_validate(self, raw_output: str) -> dict[str, Any]:
+        payload = json.loads(raw_output)
+        validated = AnswerResponse.model_validate(payload)
+        return validated.model_dump()
+
+    def _generate_real_answer(self, prompt: str, fallback_sources: list[str]) -> dict[str, Any]:
+        correction = (
+            "\nCorrection: return only valid JSON with answer as a string, sources as a list of strings, "
+            "and confidence as a number between 0 and 1."
+        )
+        last_error = "unknown validation error"
+        for attempt in range(3):
+            raw_output = self._call_real_llm(prompt if attempt == 0 else prompt + correction)
+            try:
+                return self._parse_and_validate(raw_output)
+            except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as exc:
+                last_error = str(exc)
+        return {
+            "answer": f"Unable to validate the language-model response: {last_error}",
+            "sources": fallback_sources,
+            "confidence": 0.0,
+        }
 
     def build_graph(self):
         workflow = StateGraph(AgentState)
