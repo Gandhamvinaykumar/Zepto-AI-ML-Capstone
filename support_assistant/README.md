@@ -66,3 +66,5 @@ docker run --rm -p 7860:7860 zepto-support-assistant
 ```
 
 Then open `http://127.0.0.1:7860/docs` or send a `POST /ask` request as shown above. The root `Dockerfile` provides the same service with the shorter `docker build -t zepto-capstone .` command.
+
+The module Docker image starts Uvicorn directly on port 7860 and serves the same `/ask` endpoint as the local Python command.
