@@ -104,7 +104,7 @@ def load_to_db(df: pd.DataFrame, db_path: Path) -> tuple[pd.DataFrame, pd.DataFr
     categories_df.insert(0, "category_id", range(1, len(categories_df) + 1))
     categories_df.to_sql("categories", conn, if_exists="append", index=False)
 
-    category_lookup = pd.read_sql_query("SELECT * FROM categories", conn)
+    category_lookup = pd.read_sql("SELECT * FROM categories", conn)
     books_df = df.merge(category_lookup, left_on="category", right_on="category_name", how="left")
     books_df = books_df[["title", "price_gbp", "price_inr", "rating", "in_stock", "category_id"]].copy()
     books_df.to_sql("books", conn, if_exists="append", index=False)
@@ -125,7 +125,7 @@ def run_queries(db_path: Path) -> list[tuple[str, pd.DataFrame]]:
     conn = sqlite3.connect(db_path)
     results: list[tuple[str, pd.DataFrame]] = []
     for label, sql in query_sql:
-        results.append((label, pd.read_sql_query(sql, conn)))
+        results.append((label, pd.read_sql(sql, conn)))
     conn.close()
     return results
 
@@ -156,7 +156,7 @@ def main() -> None:
 
     conn = sqlite3.connect(DB_PATH)
     join_sql = "SELECT b.title, c.category_name, b.rating, b.price_inr FROM books b JOIN categories c ON b.category_id = c.category_id ORDER BY b.rating DESC, b.price_inr DESC LIMIT 10;"
-    sql_join = pd.read_sql_query(join_sql, conn)
+    sql_join = pd.read_sql(join_sql, conn)
     pandas_join = books_df.merge(categories_df, left_on="category_id", right_on="category_id", how="inner").sort_values(["rating", "price_inr"], ascending=[False, False]).head(10).rename(columns={"category_name": "category_name"})[["title", "category_name", "rating", "price_inr"]].reset_index(drop=True)
     conn.close()
 
