@@ -18,6 +18,7 @@ python analytics/reload_pipeline_check.py
 - The post-outcome `alive` column is excluded from features because it directly leaks the `survived` target.
 - The data is split with stratification before modeling.
 - The selected pipeline is saved with `joblib.dump` and accepts raw input at prediction time.
+- The EDA script saves `analytics/boxplots.png` along with the other charts.
 - Decision trees are bounded with `max_depth`; Random Forest tuning searches only depths 4, 6, and 8 with bounded leaf sizes to reduce overfitting.
 - The imbalance comparison uses SMOTE when `imbalanced-learn` loads correctly. If Windows blocks the required scikit-learn DLL, the script uses a labeled balanced-logistic fallback so the rest of the analysis can still run.
 

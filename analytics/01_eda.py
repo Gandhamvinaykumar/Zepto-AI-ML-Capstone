@@ -100,6 +100,16 @@ plt.tight_layout()
 plt.savefig(CHART_DIR / "age_fare_distribution.png", dpi=200)
 plt.close()
 
+# Save the boxplots separately so they are easy to find for review.
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+sns.boxplot(y=df_clean["age"], ax=axes[0])
+axes[0].set_title("Age boxplot")
+sns.boxplot(y=df_clean["fare"], ax=axes[1])
+axes[1].set_title("Fare boxplot")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "boxplots.png", dpi=200)
+plt.close()
+
 # A few comparisons between variables.
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 sns.barplot(data=df_clean, x="sex", y="survived", estimator="mean", ax=axes[0, 0])
