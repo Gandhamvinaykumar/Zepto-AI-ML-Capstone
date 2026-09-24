@@ -22,8 +22,8 @@ python data_pipeline/pipeline.py
 
 ## Output
 
-The script creates a SQLite database at `data_pipeline/zepto_books.db` and a file at `data_pipeline/queries_output.txt` containing the SQL queries and their outputs.
+The script creates a SQLite database at `data_pipeline/zepto_books.db`, a file at `data_pipeline/queries_output.txt` containing the SQL queries and their outputs, and `data_pipeline/join_comparison.txt` containing the SQL JOIN result beside the equivalent pandas merge result.
 
 ## SQL coverage
 
-The generated SQL covers SELECT, WHERE, ORDER BY, LIMIT, DISTINCT, BETWEEN, and a JOIN between `categories` and `books`. The BETWEEN example uses INR 1000-2000 because the converted prices start above INR 1000. The script stops with a clear error if a required query returns no rows.
+The generated SQL covers SELECT, WHERE, ORDER BY, LIMIT, DISTINCT, BETWEEN, and a JOIN between `categories` and `books`. The BETWEEN example uses INR 1000-2000 because the converted prices start above INR 1000. The script stops with a clear error if a required query returns no rows. The SQL JOIN and pandas merge are compared directly and saved in `join_comparison.txt`.
