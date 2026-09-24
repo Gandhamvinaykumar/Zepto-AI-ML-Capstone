@@ -2,9 +2,9 @@
 
 This project brings together three related parts of the capstone:
 
-1. Data pipeline: scraping, cleaning, normalization, and relational storage
-2. Analytics pipeline: Titanic profiling, EDA, model building, and regression
-3. Support assistant: a local RAG service for Zepto policy questions
+1. Data pipeline: scraping, cleaning, normalization, and relational storage. See [data_pipeline/README.md](data_pipeline/README.md).
+2. Analytics pipeline: Titanic profiling, EDA, model building, and regression. See [analytics/README.md](analytics/README.md).
+3. Support assistant: a local RAG service for Zepto policy questions. See [support_assistant/README.md](support_assistant/README.md).
 
 The dependencies for all three parts are listed in the root `requirements.txt` file.
 

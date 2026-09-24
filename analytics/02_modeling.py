@@ -364,11 +364,18 @@ print("Residuals show no strong heteroscedasticity pattern; the spread is fairly
 print(f"\nBest classifier by holdout F1: {best_name} ({results_df.loc[results_df['model'] == best_name, 'f1'].iloc[0]:.3f})")
 
 # Save a metrics summary table for readability.
+def format_confusion_matrix(matrix: np.ndarray) -> str:
+    true_negative, false_positive, false_negative, true_positive = matrix.ravel()
+    return f"TN={true_negative}; FP={false_positive}; FN={false_negative}; TP={true_positive}"
+
+
 summary_table = pd.DataFrame(results)
 summary_table = summary_table[["model", "accuracy", "precision", "recall", "f1", "roc_auc", "confusion_matrix"]]
+summary_table["confusion_matrix"] = summary_table["confusion_matrix"].map(format_confusion_matrix)
 summary_table.to_csv(BASE_DIR / "model_metrics.csv", index=False)
 
 comparison_table = results_df[["model", "accuracy", "precision", "recall", "f1", "roc_auc", "confusion_matrix"]].copy()
+comparison_table["confusion_matrix"] = comparison_table["confusion_matrix"].map(format_confusion_matrix)
 comparison_table.insert(0, "model_type", "classification")
 comparison_table["MAE"] = np.nan
 comparison_table["RMSE"] = np.nan
