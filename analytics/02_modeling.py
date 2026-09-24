@@ -44,14 +44,14 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_PATH = BASE_DIR / "titanic.csv"
+CLEAN_DATA_PATH = BASE_DIR / "clean_titanic.csv"
 MODEL_PATH = BASE_DIR / "best_model_pipeline.joblib"
 
 
 def ensure_clean_data() -> pd.DataFrame:
-    df = pd.read_csv(DATA_PATH)
+    df = pd.read_csv(CLEAN_DATA_PATH)
     # `alive` is recorded after the outcome and would give away the answer.
-    df = df.dropna(subset=["embarked", "embark_town"]).drop(columns=["deck", "alive"], errors="ignore").copy()
-    df["age"] = df["age"].fillna(df["age"].median())
+    df = df.drop(columns=["deck", "alive", "age_zscore", "fare_zscore"], errors="ignore").copy()
     return df
 
 
@@ -317,7 +317,7 @@ mae = mean_absolute_error(reg_y_test, reg_pred)
 rmse = np.sqrt(mean_squared_error(reg_y_test, reg_pred))
 r2 = r2_score(reg_y_test, reg_pred)
 # Calculate adjusted R2 as well as the regular R2 score.
-p = reg_X_test.shape[1]
+p = regression_pipe.named_steps["preprocess"].transform(reg_X_test).shape[1]
 n = len(reg_y_test)
 adjusted_r2 = 1 - ((1 - r2) * (n - 1) / (n - p - 1))
 

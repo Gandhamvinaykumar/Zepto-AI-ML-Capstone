@@ -14,7 +14,7 @@ python analytics/reload_pipeline_check.py
 
 - Missing values under 5% are removed row-wise. `embarked` and `embark_town` each have 0.224% missing values, so the two affected rows are dropped. `age` has 19.865% missing values, so it is filled with the median. `deck` has 77.217% missing values, so it is dropped rather than imputed because that much missingness would make the values unreliable.
 - The post-outcome `alive` column is excluded from features because it directly leaks the `survived` target.
-- The data is split with stratification before modeling. The training split is about 61.7% not survived and 38.3% survived, so stratification keeps that balance similar in train and test.
+- The EDA script writes the cleaned data to `clean_titanic.csv`, and modeling reads that same file rather than loading Titanic again. The data is then split with stratification before modeling. The training split is about 61.7% not survived and 38.3% survived, so stratification keeps that balance similar in train and test.
 - The modeling `ColumnTransformer` fits the median/most-frequent imputers, one-hot encoder, and scaler on the training split through the pipeline. The test split is only transformed.
 - The selected pipeline is saved with `joblib.dump` and accepts raw input at prediction time.
 - The EDA script saves `analytics/boxplots.png` along with the other charts.
@@ -49,7 +49,7 @@ The EDA charts are saved in `analytics/charts/`. Standalone copies are also avai
 8. **Fare versus age scatter plot:** The points show that expensive fares occur across several ages, while survival labels are mixed. Fare is useful in combination with other features rather than as a single rule.
 9. **Correlation heatmap:** The heatmap highlights the strong negative association between fare and class and the positive association between sibling/spouse count and parent/child count. It also shows that no single numeric feature has a near-perfect relationship with survival.
 
-The z-score check is saved in the EDA output: age and fare both have transformed means of approximately 0 and standard deviations of 1. The transformed columns are also stored as `age_zscore` and `fare_zscore` in `clean_titanic.csv`; these exploratory columns are not used by the modeling pipeline.
+The z-score check is saved in the EDA output: age and fare both have transformed means of approximately 0 and standard deviations of 1. The transformed columns are also stored as `age_zscore` and `fare_zscore` in `clean_titanic.csv`; they are removed before modeling because this is an EDA check, not part of the model's input features.
 
 ## Modeling results
 
@@ -67,6 +67,6 @@ For imbalance handling, the baseline F1 was 0.740, class weighting produced 0.77
 
 Random Forest tuning selected `n_estimators=100`, `max_depth=6`, `max_features='sqrt'`, and `min_samples_leaf=2`, with an OOB score of about 0.812. The bounded depth and leaf-size settings reduce the chance of fitting noise in this small dataset.
 
-The fare regression produced MAE 18.394, RMSE 41.358, R2 0.359, and adjusted R2 0.316. The residual plot is saved as `residual_plot.png`; its spread is reasonably random around zero, so there is no strong visible heteroscedasticity pattern, although the model does not explain all fare variation.
+The fare regression produced MAE 18.394, RMSE 41.358, R2 0.359, and adjusted R2 0.268. The residual plot is saved as `residual_plot.png`; its spread is reasonably random around zero, so there is no strong visible heteroscedasticity pattern, although the model does not explain all fare variation.
 
 The decision tree is the selected classifier by holdout F1 at 0.744, narrowly ahead of Logistic Regression at 0.740. Logistic Regression has the best AUC at 0.869, so it ranks the classes better across thresholds. I would deploy the Decision Tree if the priority is the chosen F1 score and straightforward explanation, while keeping Logistic Regression as a strong alternative for probability ranking. Neither model should be treated as perfect; the realistic scores and the leakage removal make this comparison more trustworthy.

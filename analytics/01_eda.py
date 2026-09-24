@@ -16,11 +16,10 @@ CHART_DIR.mkdir(exist_ok=True)
 
 # Load the source data and keep a local copy for the next script.
 df = sns.load_dataset("titanic")
+df.to_csv(BASE_DIR / "titanic.csv", index=False)
 print("Raw data shape:", df.shape)
 print(df.info())
 print(df.describe())
-
-df.to_csv(BASE_DIR / "titanic.csv", index=False)
 
 df = pd.read_csv(BASE_DIR / "titanic.csv")
 print("\nMissing value percentages:")
