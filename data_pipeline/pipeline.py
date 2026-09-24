@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "zepto_books.db"
 QUERY_LOG_PATH = BASE_DIR / "queries_output.txt"
+JOIN_COMPARISON_PATH = BASE_DIR / "join_comparison.txt"
 
 URLS = {
     "Mystery": "https://books.toscrape.com/catalogue/category/books/mystery_3/index.html",
@@ -161,7 +162,14 @@ def main() -> None:
 
     print("\nSQL join result:\n", sql_join.to_string(index=False))
     print("\nPandas merge result:\n", pandas_join.to_string(index=False))
-    print("Equivalent check:", sql_join.reset_index(drop=True).equals(pandas_join.reset_index(drop=True)))
+    equivalent = sql_join.reset_index(drop=True).equals(pandas_join.reset_index(drop=True))
+    with JOIN_COMPARISON_PATH.open("w", encoding="utf-8") as fh:
+        fh.write("SQL JOIN RESULT\n")
+        fh.write(sql_join.to_string(index=False))
+        fh.write("\n\nPANDAS MERGE RESULT\n")
+        fh.write(pandas_join.to_string(index=False))
+        fh.write(f"\n\nEQUIVALENT: {equivalent}\n")
+    print("Equivalent check:", equivalent)
 
 
 if __name__ == "__main__":
