@@ -37,7 +37,7 @@ The survival rates were:
 
 The two strongest absolute correlations were fare with pclass (`-0.548`) and parch with sibsp (`0.415`). The negative fare/pclass relationship means first-class passengers generally paid more, while the positive parch/sibsp relationship shows that family size variables tend to move together. The heatmap is saved as `charts/corr_heatmap.png`.
 
-The EDA charts are saved in `analytics/charts/`, with the main boxplots also copied to `analytics/boxplots.png`:
+The EDA charts are saved in `analytics/charts/`. Standalone copies are also available as `analytics/histograms.png`, `analytics/boxplots.png`, and `analytics/scatterplot.png`:
 
 1. **Age histogram:** Most passengers were young adults, with fewer passengers at the oldest ages. This shows why the median is a reasonable value for the missing ages.
 2. **Age boxplot:** The upper tail contains several older-age outliers under the IQR rule. They are reported but retained because age is a meaningful passenger characteristic.

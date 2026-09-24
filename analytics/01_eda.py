@@ -106,6 +106,16 @@ plt.tight_layout()
 plt.savefig(CHART_DIR / "age_fare_distribution.png", dpi=200)
 plt.close()
 
+# Save the two histograms separately for easy review.
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+sns.histplot(df_clean["age"], bins=25, kde=True, ax=axes[0])
+axes[0].set_title("Age histogram")
+sns.histplot(df_clean["fare"], bins=30, kde=True, ax=axes[1])
+axes[1].set_title("Fare histogram")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "histograms.png", dpi=200)
+plt.close()
+
 # Save the boxplots separately so they are easy to find for review.
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 sns.boxplot(y=df_clean["age"], ax=axes[0])
@@ -132,6 +142,14 @@ axes[1, 1].set_title("Fare vs age by survival")
 
 plt.tight_layout()
 plt.savefig(CHART_DIR / "multivariate_story.png", dpi=200)
+plt.close()
+
+# Save the fare-age relationship as its own scatterplot.
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7)
+plt.title("Fare versus age by survival")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "scatterplot.png", dpi=200)
 plt.close()
 
 # Check the standardized age and fare values.
