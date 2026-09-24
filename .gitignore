@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+*.db
+*.joblib
+*.pkl
+*.sqlite3
+.DS_Store
+analytics/charts/
+analytics/*.joblib
+support_assistant/chroma/
+support_assistant/chroma_store/
+__pycache__/
