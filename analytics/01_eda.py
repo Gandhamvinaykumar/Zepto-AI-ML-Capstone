@@ -154,14 +154,6 @@ plt.tight_layout()
 plt.savefig(BASE_DIR / "fare_age_survival.png", dpi=200)
 plt.close()
 
-# Save the fare-age relationship as its own scatterplot.
-plt.figure(figsize=(8, 6))
-sns.scatterplot(data=df_clean, x="fare", y="age", hue="survived", alpha=0.7)
-plt.title("Fare versus age by survival")
-plt.tight_layout()
-plt.savefig(BASE_DIR / "scatterplot.png", dpi=200)
-plt.close()
-
 # Check the standardized age and fare values.
 for col in ["age", "fare"]:
     z_col = (df_clean[col] - df_clean[col].mean()) / df_clean[col].std(ddof=0)
