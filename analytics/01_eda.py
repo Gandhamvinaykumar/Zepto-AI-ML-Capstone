@@ -28,14 +28,12 @@ print(df.isna().mean().mul(100).sort_values(ascending=False))
 
 # `deck` is mostly missing, so it is left out. The smaller gaps are filled below.
 
-df_clean = df.drop(columns=["deck"]).copy()
+# The two rows with missing embarked values are below the 5% threshold, so drop them.
+df_clean = df.dropna(subset=["embarked", "embark_town"]).drop(columns=["deck"]).copy()
 df_clean["age"] = df_clean["age"].fillna(df_clean["age"].median())
-df_clean["embarked"] = df_clean["embarked"].fillna(df_clean["embarked"].mode()[0])
-df_clean["embark_town"] = df_clean["embark_town"].fillna(df_clean["embark_town"].mode()[0])
 
 print("\nAge missing count after fill:", df_clean["age"].isna().sum())
-print("Embarked missing count after fill:", df_clean["embarked"].isna().sum())
-print("Embark town missing count after fill:", df_clean["embark_town"].isna().sum())
+print("Rows after dropping small missing-value gaps:", len(df_clean))
 
 # Count outliers with the IQR rule.
 for col in ["age", "fare"]:
@@ -123,6 +121,7 @@ plt.close()
 # Check the standardized age and fare values.
 for col in ["age", "fare"]:
     z_col = (df_clean[col] - df_clean[col].mean()) / df_clean[col].std(ddof=0)
+    df_clean[f"{col}_zscore"] = z_col
     print(f"{col} z-score mean={z_col.mean():.6f}, std={z_col.std(ddof=0):.6f}")
 
 # Save the cleaned data for modeling.

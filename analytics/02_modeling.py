@@ -49,10 +49,8 @@ MODEL_PATH = BASE_DIR / "best_model_pipeline.joblib"
 def ensure_clean_data() -> pd.DataFrame:
     df = pd.read_csv(DATA_PATH)
     # `alive` is recorded after the outcome and would give away the answer.
-    df = df.drop(columns=["deck", "alive"], errors="ignore").copy()
+    df = df.dropna(subset=["embarked", "embark_town"]).drop(columns=["deck", "alive"], errors="ignore").copy()
     df["age"] = df["age"].fillna(df["age"].median())
-    df["embarked"] = df["embarked"].fillna(df["embarked"].mode()[0])
-    df["embark_town"] = df["embark_town"].fillna(df["embark_town"].mode()[0])
     return df
 
 
@@ -224,10 +222,10 @@ print(pd.DataFrame(imbalance_results).to_string(index=False))
 
 # Tune the Random Forest while keeping the tree sizes bounded.
 rf_param_grid = {
-    "model__n_estimators": [100, 200],
+    "model__n_estimators": [100],
     "model__max_depth": [4, 6, 8],
     "model__min_samples_leaf": [1, 2],
-    "model__max_features": ["sqrt", "log2", None],
+    "model__max_features": ["sqrt", "log2"],
 }
 rf_grid = GridSearchCV(
     estimator=Pipeline(
@@ -235,7 +233,7 @@ rf_grid = GridSearchCV(
             ("preprocess", preprocessor),
             (
                 "model",
-                RandomForestClassifier(oob_score=True, random_state=42, n_jobs=-1),
+                RandomForestClassifier(oob_score=True, random_state=42, n_jobs=1),
             ),
         ]
     ),
