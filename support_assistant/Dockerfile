@@ -10,4 +10,4 @@ COPY support_assistant ./support_assistant
 WORKDIR /app/support_assistant
 EXPOSE 7860
 
-CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
