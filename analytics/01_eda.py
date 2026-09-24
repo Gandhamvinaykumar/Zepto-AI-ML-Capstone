@@ -51,16 +51,22 @@ fare_mode = df_clean["fare"].mode().iloc[0]
 print(f"Fare mean={fare_mean:.3f}, median={fare_median:.3f}, mode={fare_mode:.3f}")
 print("Fare distribution is right-skewed because mean > median > mode.")
 
-# Bivariate survival rates.
-survival_by_sex = df_clean.groupby("sex")["survived"].mean()
-survival_by_pclass = df_clean.groupby("pclass")["survived"].mean()
-survival_by_sex_pclass = df_clean.groupby(["sex", "pclass"])["survived"].mean().unstack()
+# Bivariate survival rates, calculated with explicit boolean masks.
+sex_masks = {sex: df_clean["sex"] == sex for sex in ["female", "male"]}
+pclass_masks = {pclass: df_clean["pclass"] == pclass for pclass in [1, 2, 3]}
+survival_by_sex = {sex: df_clean.loc[mask, "survived"].mean() for sex, mask in sex_masks.items()}
+survival_by_pclass = {pclass: df_clean.loc[mask, "survived"].mean() for pclass, mask in pclass_masks.items()}
+survival_by_sex_pclass = {}
+for sex, sex_mask in sex_masks.items():
+    for pclass, pclass_mask in pclass_masks.items():
+        combined_mask = sex_mask & pclass_mask
+        survival_by_sex_pclass[(sex, pclass)] = df_clean.loc[combined_mask, "survived"].mean()
 print("\nSurvival by sex:")
-print(survival_by_sex)
+print(pd.Series(survival_by_sex))
 print("\nSurvival by pclass:")
-print(survival_by_pclass)
+print(pd.Series(survival_by_pclass))
 print("\nSurvival by sex and pclass:")
-print(survival_by_sex_pclass)
+print(pd.Series(survival_by_sex_pclass))
 
 # Compare the main numeric columns.
 correlation_columns = ["survived", "pclass", "age", "sibsp", "parch", "fare"]

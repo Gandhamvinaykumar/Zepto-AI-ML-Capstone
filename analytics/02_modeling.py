@@ -33,6 +33,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
+    roc_curve,
     r2_score,
 )
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -130,6 +131,8 @@ pipelines = {
 }
 
 results = []
+roc_data = []
+confusion_matrices = {}
 for name, pipe in pipelines.items():
     pipe.fit(X_train, y_train)
     y_pred = pipe.predict(X_test)
@@ -145,6 +148,9 @@ for name, pipe in pipelines.items():
             "confusion_matrix": confusion_matrix(y_test, y_pred),
         }
     )
+    confusion_matrices[name] = confusion_matrix(y_test, y_pred)
+    fpr, tpr, _ = roc_curve(y_test, y_prob)
+    roc_data.append((name, fpr, tpr, results[-1]["roc_auc"]))
 
 results_df = pd.DataFrame(results)
 print("\nClassification comparison table:")
@@ -168,6 +174,28 @@ plot_tree(
 )
 plt.tight_layout()
 plt.savefig(BASE_DIR / "decision_tree.png", dpi=200)
+plt.close()
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+for axis, (name, matrix) in zip(axes, confusion_matrices.items()):
+    sns.heatmap(matrix, annot=True, fmt="d", cmap="Blues", cbar=False, ax=axis)
+    axis.set_title(name.replace("_", " ").title())
+    axis.set_xlabel("Predicted")
+    axis.set_ylabel("Actual")
+plt.tight_layout()
+plt.savefig(BASE_DIR / "confusion_matrices.png", dpi=200)
+plt.close()
+
+plt.figure(figsize=(8, 6))
+for name, fpr, tpr, auc_value in roc_data:
+    plt.plot(fpr, tpr, label=f"{name.replace('_', ' ').title()} (AUC={auc_value:.3f})")
+plt.plot([0, 1], [0, 1], "k--", label="Chance")
+plt.xlabel("False positive rate")
+plt.ylabel("True positive rate")
+plt.title("ROC curves")
+plt.legend()
+plt.tight_layout()
+plt.savefig(BASE_DIR / "roc_curves.png", dpi=200)
 plt.close()
 
 # Compare a plain, weighted, and oversampled classifier.
@@ -313,6 +341,29 @@ print(f"\nBest classifier by holdout F1: {best_name} ({results_df.loc[results_df
 
 # Save a metrics summary table for readability.
 summary_table = pd.DataFrame(results)
-summary_table = summary_table[["model", "accuracy", "precision", "recall", "f1", "roc_auc"]]
+summary_table = summary_table[["model", "accuracy", "precision", "recall", "f1", "roc_auc", "confusion_matrix"]]
 summary_table.to_csv(BASE_DIR / "model_metrics.csv", index=False)
+
+comparison_table = results_df[["model", "accuracy", "precision", "recall", "f1", "roc_auc", "confusion_matrix"]].copy()
+comparison_table.insert(0, "model_type", "classification")
+comparison_table["MAE"] = np.nan
+comparison_table["RMSE"] = np.nan
+comparison_table["R2"] = np.nan
+comparison_table["Adjusted_R2"] = np.nan
+regression_row = pd.DataFrame([{
+    "model_type": "regression",
+    "model": "linear_regression_fare",
+    "accuracy": np.nan,
+    "precision": np.nan,
+    "recall": np.nan,
+    "f1": np.nan,
+    "roc_auc": np.nan,
+    "confusion_matrix": "",
+    "MAE": mae,
+    "RMSE": rmse,
+    "R2": r2,
+    "Adjusted_R2": adjusted_r2,
+}])
+pd.concat([comparison_table, regression_row], ignore_index=True).to_csv(BASE_DIR / "model_comparison.csv", index=False)
 print("\nSaved model metrics summary to analytics/model_metrics.csv")
+print("Saved combined model comparison to analytics/model_comparison.csv")
