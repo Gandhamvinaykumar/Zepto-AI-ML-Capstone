@@ -57,7 +57,10 @@ class PolicyAssistant:
         self.mock_llm = os.getenv("MOCK_LLM", "1") not in {"0", "False", "false"}
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
         self.client = chromadb.PersistentClient(path=str(VECTOR_STORE_PATH))
-        self.collection = self.client.get_or_create_collection(name=COLLECTION_NAME)
+        self.collection = self.client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            metadata={"hnsw:space": "cosine"},
+        )
         self._bootstrap_collection()
 
     def _bootstrap_collection(self) -> None:

@@ -156,6 +156,7 @@ plt.close()
 
 # Check the standardized age and fare values.
 for col in ["age", "fare"]:
+    print(f"{col} before z-score mean={df_clean[col].mean():.6f}, std={df_clean[col].std(ddof=0):.6f}")
     z_col = (df_clean[col] - df_clean[col].mean()) / df_clean[col].std(ddof=0)
     df_clean[f"{col}_zscore"] = z_col
     print(f"{col} z-score mean={z_col.mean():.6f}, std={z_col.std(ddof=0):.6f}")

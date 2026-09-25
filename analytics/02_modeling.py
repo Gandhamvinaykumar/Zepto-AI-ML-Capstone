@@ -208,7 +208,7 @@ print(pd.DataFrame(imbalance_results).to_string(index=False))
 
 # Tune the Random Forest while keeping the tree sizes bounded.
 rf_param_grid = {
-    "model__n_estimators": [100],
+    "model__n_estimators": [100, 200],
     "model__max_depth": [4, 6, 8],
     "model__min_samples_leaf": [1, 2],
     "model__max_features": ["sqrt", "log2"],
